@@ -1,6 +1,7 @@
 int food_number = 300;
 float scaling = 1.0;
-float scalingSpeed = 0.01;
+float scalingSpeed = 0.03;
+float maxSearchRadius = 20;
 
 Bacteria b;
 Food[] food = new Food[food_number];
@@ -39,10 +40,9 @@ void draw() {
 void mouseWheel(MouseEvent event) {
   float e = event.getCount();
   if (e > 0) {
-    scaling += scalingSpeed;
+    scaling -= scalingSpeed;
   }
   else if (e < 0) {
-  
-  scaling -= scalingSpeed;
+    scaling += scalingSpeed;
   }
 }
