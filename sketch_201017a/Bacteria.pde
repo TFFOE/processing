@@ -1,64 +1,37 @@
-enum BacteriaState {
-  CALM,
-  PANIK
-}
-
 class Bacteria {
-   static final float max_rotation_speed = 0.1;
+   static final float max_rotation_speed = 0.45;
    
    PVector pos;
-   PVector translated_pos;
    float speed;
    float angle;
    color clr;
    float size;
-
-   BacteriaState state = BacteriaState.CALM;
-   PVector target;
+   float searchDistance = 400;
+   
+   // 0 - режим ожидания
+   // 1 - движение к еде
+   int mode = 0;
+   Food target;
+   int target_index = -1;
+   
+   Bacteria(float x, float y, float size, float speed, float angle, color clr, float searchDistance) {
+     this(x, y, size, speed, angle, clr);
+     this.searchDistance = searchDistance;
+   }
    
    Bacteria(float x, float y, float size, float speed, float angle, color clr) {
      pos = new PVector(x, y);
-     translated_pos = PVector.mult(pos, scaling);
      this.size = size;
      this.speed = speed;
      this.angle = angle;
      this.clr = clr;
    }
    
-   void searchForNearestFood(Food[] food) {
-     switch (state) {
-       case CALM:
-         target = translated_pos.copy();
-             
-       case PANIK:
-         float min_dist = maxSearchRadius;
-         int min_index = -1;
-         for (int i = 0; i < food.length; ++i) {
-           float line_length = food[i].pos.sub(pos).mag();
-           if (line_length < min_dist) {
-             min_dist = line_length;
-             min_index = i;
-           }
-         }
-         if (min_index != -1) {
-           state = BacteriaState.CALM;
-           target = food[min_index].pos.copy();
-         }
-         else {
-            state = BacteriaState.PANIK;
-            target = pos.copy();
-         }
-       break;
-     }
-   }
-   
    void update() {
      PVector d_pos = PVector.fromAngle(angle);
      d_pos.setMag(speed);
-     d_pos.mult(scaling);
      
      pos.add(d_pos);
-     translated_pos = PVector.mult(pos, scaling);
    }
    
    void moveToPoint(float x, float y) {
@@ -66,7 +39,7 @@ class Bacteria {
    }
    
    void moveToPoint(PVector point) {
-     if (PVector.dist(translated_pos, point) > 1) {
+     if (PVector.dist(pos, point) > 0.5) {
        rotateTo(point);
        update();
      }
@@ -77,7 +50,7 @@ class Bacteria {
    }
    
    void rotateTo(PVector pointToRotate) {
-     PVector fromPosToPoint = pointToRotate.sub(translated_pos);
+     PVector fromPosToPoint = PVector.sub(pointToRotate, pos);
      float pointDirection = fromPosToPoint.heading();
      float rotateTo = pointDirection - this.angle;
      
@@ -94,6 +67,78 @@ class Bacteria {
      }
    }
    
+   boolean targetReached() {
+     float reachDistance = this.size / 2;
+     return this.pos.dist(target.pos) < reachDistance;
+   }
+   
+   void moveToNearestFood() throws SizeChangedException {
+     if (target != null && target.eaten) {
+       target = null;
+       target_index = -1;
+       mode = 0;
+       return;
+     }
+     
+     if (mode == 0) {
+       try {
+         target = searchForNearestFood(food); //<>//
+       }
+       catch (NoFoodException ex) {
+         textAlign(CENTER, CENTER);
+         textSize(30);
+         fill(#ff0000);
+         text("Еда закончилась :с", pos.x, pos.y - 40);
+       }
+       
+       if (target != null) {
+         mode = 1;
+       }
+     }
+     else if (mode == 1) { // Moving to target
+       moveToPoint(target.pos);
+       if (targetReached()) {
+         size += food.get(target_index).size / 30;
+         // speed -= 0.03;
+         mode = 0;
+         
+         food.get(target_index).eaten = true;
+         
+         target_index = -1;
+         target = null;
+         throw new SizeChangedException();
+       }
+     }
+   }
+   
+   Food searchForNearestFood(ArrayList<Food> foods) throws NoFoodException {
+     float min_distance = searchDistance;
+     Food nearest = null;
+     target_index = -1;
+     target = null;
+     
+     for (int i = 0; i < foods.size(); ++i) {
+       Food current_food = foods.get(i);
+       
+       if (current_food.eaten) {
+         continue;
+       }
+       
+       float current_distance = PVector.dist(this.pos, current_food.pos);
+       if (current_distance < this.searchDistance/2 && current_distance < min_distance) {
+         nearest = current_food;
+         target_index = i;
+         min_distance = current_distance;
+       }
+     }
+     
+     if (nearest != null)
+       nearest.clr = #ff0000;
+     else
+       throw new NoFoodException();
+     return nearest;
+   }
+   
    void rotate(float d_angle) {
       angle += d_angle;
       if (angle > PI)
@@ -108,9 +153,13 @@ class Bacteria {
    }
    
    void draw() {
+     noStroke();
+     fill(127, 127, 127, 50);
+     circle(pos.x, pos.y, searchDistance);
+     
      stroke(0);
      strokeWeight(3);
      fill(clr);
-     circle(translated_pos.x, translated_pos.y, size * scaling);
+     circle(pos.x, pos.y, size);
    }
 }

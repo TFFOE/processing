@@ -1,6 +1,8 @@
 class Food {
   PVector pos;
   float size;
+  color clr = #0000ff;
+  boolean eaten = false;
   
   Food(PVector pos, float size) {
     this(pos.x, pos.y, size); 
@@ -13,7 +15,7 @@ class Food {
   
   void draw() {
     noStroke();
-    fill(#ffff00);
-    circle(pos.x * scaling, pos.y * scaling, size * scaling); 
+    fill(clr);
+    circle(pos.x, pos.y, size * 2); 
   }
 }
