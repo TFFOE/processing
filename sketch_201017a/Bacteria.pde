@@ -1,11 +1,12 @@
 class Bacteria {
-   static final float max_rotation_speed = 0.45;
+   static final float max_rotation_speed = 1;
    
    PVector pos;
    float speed;
    float angle;
    color clr;
    float size;
+   float base_size;
    float searchDistance = 400;
    
    // 0 - режим ожидания
@@ -22,6 +23,7 @@ class Bacteria {
    Bacteria(float x, float y, float size, float speed, float angle, color clr) {
      pos = new PVector(x, y);
      this.size = size;
+     this.base_size = size;
      this.speed = speed;
      this.angle = angle;
      this.clr = clr;
@@ -29,9 +31,18 @@ class Bacteria {
    
    void update() {
      PVector d_pos = PVector.fromAngle(angle);
-     d_pos.setMag(speed);
-     
+     float size_mod = 90 + size/base_size;
+     float calibratedSpeed = speed * (1 / log(log(size_mod)));
+     d_pos.setMag(calibratedSpeed);
      pos.add(d_pos);
+   }
+   
+   void moveInPoint(float x, float y) {
+     moveInPoint(new PVector(x, y));
+   }
+   
+   void moveInPoint(PVector new_pos) {
+     this.pos = new_pos;
    }
    
    void moveToPoint(float x, float y) {
@@ -39,9 +50,13 @@ class Bacteria {
    }
    
    void moveToPoint(PVector point) {
-     if (PVector.dist(pos, point) > 0.5) {
+     float distance = PVector.dist(pos, point);
+     if (distance > speed) {
        rotateTo(point);
        update();
+     } 
+     else {
+       moveInPoint(point);
      }
    }
    
@@ -59,7 +74,19 @@ class Bacteria {
      else if (rotateTo > PI)
        rotateTo -= 2 * PI;
      
-     if (rotateTo > 0.01) {
+     if (rotateTo > max_rotation_speed) {
+       this.rotate(rotateTo); 
+     }
+     else if (rotateTo < -max_rotation_speed) {
+       this.rotate(-rotateTo); 
+     }
+     else if (rotateTo > 0 && rotateTo < 0.5) {
+       this.rotate(0.1);
+     }
+     else if (rotateTo < 0 && rotateTo > -0.5) {
+       this.rotate(-0.1); 
+     }
+     else if (rotateTo > 0.01) {
        this.rotate(max_rotation_speed);
      }
      else if (rotateTo < -0.01) {
@@ -98,8 +125,7 @@ class Bacteria {
      else if (mode == 1) { // Moving to target
        moveToPoint(target.pos);
        if (targetReached()) {
-         size += food.get(target_index).size / 30;
-         // speed -= 0.03;
+         size += food.get(target_index).size / 20;
          mode = 0;
          
          food.get(target_index).eaten = true;

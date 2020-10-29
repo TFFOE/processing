@@ -1,6 +1,6 @@
-int food_number = 1000;
+int food_number = 500;
 
-static float scaling_base = 0.5;
+static float scaling_base = 0.2;
 float scaling = scaling_base;
 float scalingSpeed = 0.05;
 
@@ -28,11 +28,11 @@ void setup() {
   }
   
   bacterias = new Bacteria[] { 
-    b = new Bacteria(width/2 - 200, height/2, 25, 7, 0, #55ff55, 1000), 
-    b1 = new Bacteria(width/2 - 400, height/2, 25, 7, 0, #55ff55, 1200),
+    b =  new Bacteria(width/2 - 200, height/2, 25, 10, 0, #55ff55, 1000), 
+    b1 = new Bacteria(width/2 - 400, height/2, 25, 50, 0, #55ff55, 2000),
     b2 = new Bacteria(width/2 - 600, height/2, 25, 7, 0, #55ff55, 400),
-    b3 = new Bacteria(width/2 + 200, height/2, 25, 7, 0, #55ff55, 600),
-    b4 = new Bacteria(width/2 + 400, height/2, 25, 7, 0, #55ff55, 200)
+    b3 = new Bacteria(width/2 + 200, height/2, 25, 9, 0, #55ff55, 600),
+    b4 = new Bacteria(width/2 + 400, height/2, 25, 4, 0, #55ff55, 200)
   };
 }
 
